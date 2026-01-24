@@ -1,17 +1,17 @@
 package config
 
-import  {
-	"gorm.io/gorm"
-	"github.com/rs/zerolog/log"
+import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
-	}
+	"gorm.io/gorm"
+)
 
-	type Postgres struct {
-		DB*gorm.DB
-	}
+type Postgres struct {
+	DB *gorm.DB
+}
 
-	func ConnectionPostgres(cfg *config.Config) (*Postgres, error) {
+func ConnectionPostgres(cfg *Config) (*Postgres, error) {
 	dbConnString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
 		cfg.Psql.User,
 		cfg.Psql.Password,

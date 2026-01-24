@@ -23,27 +23,29 @@ type PsqlDB struct {
 }
 
 type Config struct {
-	App   App    `json:"app"`
-	Psql  PsqlDB `json:"psql"`
+	App    App       `json:"app"`
+	Jwt    JwtConfig `json:"jwt"`
+	Psql   PsqlDB    `json:"psql"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		App : App{
-			AppPort : viper.GetString("APP_PORT"),
-			AppEnv: viper.GetString("APP_PORT"),
-
+		App: App{
+			AppPort: viper.GetString("APP_PORT"),
+			AppEnv:  viper.GetString("APP_ENV"),
+		},
+		Jwt: JwtConfig{
 			JwtSecretKey: viper.GetString("JWT_SECRET_KEY"),
-			JwtIssuer: viper.GetString("JWT_ISSUER"),
+			JwtIssuer:    viper.GetString("JWT_ISSUER"),
 		},
 		Psql: PsqlDB{
-			Host: viper.GetString{"DATABASE_HOST"},
-			Port: viper.GetString{"DATABASE_PORT"},
-			User: viper.GetString{"DATABASE_USER"},
-			Password: viper.GetString{"DATABASE_PASSWORD"},
-			DBName:  viper.GetString{"DATABASE_NAME"},
-			DBMaxOpen: viper.GetString{"DATABASE_MAX_OPEN_CONNECTION"},
-			DBMaxIdle: viper.GetString{"DATABASE_MAX_IDLE_CONNECTION"},
+			Host:       viper.GetString("DATABASE_HOST"),
+			Port:       viper.GetString("DATABASE_PORT"),
+			User:       viper.GetString("DATABASE_USER"),
+			Password:   viper.GetString("DATABASE_PASSWORD"),
+			DBName:     viper.GetString("DATABASE_NAME"),
+			DBMaxOpen:  viper.GetInt("DATABASE_MAX_OPEN_CONNECTION"),
+			DBMaxIdle:  viper.GetInt("DATABASE_MAX_IDLE_CONNECTION"),
 		},
 	}
 }
