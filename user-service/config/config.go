@@ -44,6 +44,6 @@ func NewConfig() *Config {
 			DBName:  viper.GetString{"DATABASE_NAME"},
 			DBMaxOpen: viper.GetString{"DATABASE_MAX_OPEN_CONNECTION"},
 			DBMaxIdle: viper.GetString{"DATABASE_MAX_IDLE_CONNECTION"},
-		}
+		},
 	}
 }
