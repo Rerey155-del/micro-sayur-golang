@@ -3,11 +3,9 @@ package seeds
 import (
 	"user-service/internal/core/domain/model"
 	"user-service/utils/conv"
-
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
-
 
 func SeedAdmin(db *gorm.DB) {
 	SeedRole(db)
