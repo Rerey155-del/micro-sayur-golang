@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"user-service/database/seeds"
 )
 
 type Postgres struct {
@@ -31,6 +32,7 @@ func ConnectionPostgres(cfg *Config) (*Postgres, error) {
 		return nil, err
 	}
 
+	seeds.SeetRole(db)
 	seeds.SeedAdmin(db)
 
 	sqlDB.SetMaxOpenConns(cfg.Psql.DBMaxOpen)
