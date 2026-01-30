@@ -8,10 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
+
 func SeedAdmin(db *gorm.DB) {
 	SeedRole(db)
 
-	bytes, err := conv.HashPassword("admin123")
+	bytes, err := conv("admin123")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to hash password")
 	}
