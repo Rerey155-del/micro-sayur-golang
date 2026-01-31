@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"user-service/internal/core/domain/entity"
 	"user-service/internal/core/domain/model"
 
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -31,7 +31,9 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 		First(&modelUser).Error
 
 	if err != nil {
-		log.Error().Err(err).Msg("[UserRepository] GetUserByEmail failed")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
 

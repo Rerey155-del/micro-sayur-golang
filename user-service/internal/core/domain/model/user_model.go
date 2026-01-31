@@ -3,7 +3,7 @@ package model
 import "time"
 
 type User struct {
-	ID         int       `gorm:"primaryKey"`
+	ID         int `gorm:"primaryKey"`
 	Name       string
 	Email      string
 	Password   string
@@ -16,5 +16,5 @@ type User struct {
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time
-	Roles      []Role `gorm:"many2many:user_role"`
+	Roles      []Role `gorm:"many2many:user_roles"`
 }

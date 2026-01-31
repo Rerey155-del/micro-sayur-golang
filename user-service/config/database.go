@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
+	"user-service/database/seeds"
+
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"user-service/database/seeds"
 )
 
 type Postgres struct {
@@ -13,7 +14,7 @@ type Postgres struct {
 }
 
 func ConnectionPostgres(cfg *Config) (*Postgres, error) {
-	dbConnString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+	dbConnString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.Psql.User,
 		cfg.Psql.Password,
 		cfg.Psql.Host,

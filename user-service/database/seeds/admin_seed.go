@@ -10,7 +10,7 @@ import (
 func SeedAdmin(db *gorm.DB) {
 	SeedRole(db)
 
-	bytes, err := conv("admin123")
+	bytes, err := conv.HashPassword("admin123")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to hash password")
 	}
@@ -31,7 +31,7 @@ func SeedAdmin(db *gorm.DB) {
 
 	if err := db.FirstOrCreate(&admin, model.User{Email: "superadmin@gmail.com"}).Error; err != nil {
 		log.Fatal().Err(err).Msg("Failed to seed admin user")
-	} else {
-		log.Info().Msg("Admin user seeded successfully")
 	}
+
+	log.Info().Msg("Admin user seeded successfully")
 }

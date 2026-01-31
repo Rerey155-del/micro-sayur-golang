@@ -11,6 +11,7 @@ type UserRole struct {
 	DeletedAt *time.Time
 }
 
+
 func (UserRole) TableName() string {
 	return "user_role"
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"user-service/internal/adapter/repository"
 	"user-service/utils/conv"
+
 	"github.com/labstack/gommon/log"
 )
 
