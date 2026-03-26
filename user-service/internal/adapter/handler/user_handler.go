@@ -16,6 +16,7 @@ import (
 // Ini membantu kita dalam abstraksi dan mempermudah testing (mocking).
 type UserHandlerInterface interface {
 	SignIn(c echo.Context) error
+	GetUsers(c echo.Context) error
 }
 
 // userHandler adalah implementasi dari UserHandlerInterface.
@@ -68,6 +69,21 @@ func (u *userHandler) SignIn(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// GetUsers menangani request untuk mengambil semua data user.
+func (u *userHandler) GetUsers(c echo.Context) error {
+	resp := response.DefaultResponse{}
+
+	users, err := u.userService.FetchAllUsers(c.Request().Context())
+	if err != nil {
+		resp.Message = err.Error()
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	resp.Message = "Users fetched successfully"
+	resp.Data = users
+	return c.JSON(http.StatusOK, resp)
+}
+
 // NewUserHandler adalah fungsi generator untuk membuat instance handler baru dan mendaftarkan route-nya ke Echo.
 func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface) UserHandlerInterface {
 	userHandler := &userHandler{
@@ -79,6 +95,7 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface) User
 
 	// Mendaftarkan endpoint POST /signin ke fungsi handler SignIn.
 	e.POST("/signin", userHandler.SignIn)
+	e.GET("/users", userHandler.GetUsers)
 
 	return userHandler
 }

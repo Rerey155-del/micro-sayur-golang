@@ -24,7 +24,12 @@ func RunServer(userService service.UserServiceInterface) {
 	e := echo.New()
 
 	// 2. Mendaftarkan Middleware. Middleware adalah kode yang jalan sebelum Handler dipanggil.
-	e.Use(middleware.CORS())    // Mengizinkan request dari domain lain (Cross-Origin Resource Sharing).
+	e.Use(middleware.Logger()) // Mencatat setiap request yang masuk ke terminal.
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
 	e.Use(middleware.Recover()) // Mencegah server mati jika ada panic error.
 
 	// 3. Konfigurasi Validator untuk validasi input (misal: format email harus valid).
@@ -36,6 +41,9 @@ func RunServer(userService service.UserServiceInterface) {
 	e.Validator = customValidator
 
 	// 4. Endpoint sederhana untuk cek status server secara manual.
+	e.GET("/", func(c echo.Context) error {
+		return c.String(200, "User Service is Running on Port 8085!")
+	})
 	e.GET("/api/check", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
@@ -43,10 +51,10 @@ func RunServer(userService service.UserServiceInterface) {
 	// 5. Mendaftarkan User Handler ke instance Echo agar endpoint /signin bisa diakses.
 	handler.NewUserHandler(e, userService)
 
-	// 6. Mengambil port dari environment variable (misal: 8080).
+	// 6. Mengambil port dari environment variable (misal: 8082).
 	port := os.Getenv("APP_PORT")
 	if port == "" {
-		port = "8080"
+		port = "8085"
 	}
 
 	// 7. Menjalankan server di background (goroutine) supaya kode selanjutnya tetap bisa jalan.

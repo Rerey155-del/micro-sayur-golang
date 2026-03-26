@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"user-service/internal/adapter/repository"
+	"user-service/internal/core/domain/entity"
 	"user-service/utils/conv"
 
 	"github.com/labstack/gommon/log"
@@ -13,6 +14,7 @@ import (
 // Service bertanggung jawab untuk aturan bisnis, seperti validasi password, enkripsi, dll.
 type UserServiceInterface interface {
 	SignIn(ctx context.Context, email, password string) (string, error)
+	FetchAllUsers(ctx context.Context) ([]entity.UserEntity, error)
 }
 
 // userService adalah implementasi dari UserServiceInterface.
@@ -42,6 +44,16 @@ func (u *userService) SignIn(ctx context.Context, email, password string) (strin
 	// 3. Jika email ada dan password benar, kembalikan pesan sukses.
 	// Nantinya di sini bisa ditambahkan logika untuk pembuatan token JWT.
 	return "Login successful", nil
+}
+
+// FetchAllUsers mengambil semua data user.
+func (u *userService) FetchAllUsers(ctx context.Context) ([]entity.UserEntity, error) {
+	users, err := u.repo.FetchAllUsers(ctx)
+	if err != nil {
+		log.Errorf("[UserService] FetchAllUsers: %v", err)
+		return nil, err
+	}
+	return users, nil
 }
 
 // NewUserService adalah fungsi generator untuk membuat instance service baru.

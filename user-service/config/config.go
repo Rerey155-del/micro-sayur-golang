@@ -15,7 +15,7 @@ type JwtConfig struct {
 }
 
 // PsqlDB menyimpan konfigurasi koneksi ke database PostgreSQL.
-type PsqlDB struct {
+type DBConfig struct {
 	Host      string `json:"host"`
 	Port      string `json:"port"`
 	User      string `json:"user"`
@@ -29,7 +29,7 @@ type PsqlDB struct {
 type Config struct {
 	App  App       `json:"app"`
 	Jwt  JwtConfig `json:"jwt"`
-	Psql PsqlDB    `json:"psql"`
+	DB   DBConfig  `json:"db"`
 }
 
 // NewConfig adalah fungsi generator untuk membuat instance Config baru dengan mengambil data dari environment variable menggunakan viper.
@@ -47,7 +47,7 @@ func NewConfig() *Config {
 			// Mengambil nama issuer (pembuat) token JWT.
 			JwtIssuer: viper.GetString("JWT_ISSUER"),
 		},
-		Psql: PsqlDB{
+		DB: DBConfig{
 			// Mengambil konfigurasi detail database dari variabel environment.
 			Host:      viper.GetString("DATABASE_HOST"),
 			Port:      viper.GetString("DATABASE_PORT"),

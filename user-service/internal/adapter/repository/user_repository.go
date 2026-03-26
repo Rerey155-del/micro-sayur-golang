@@ -14,6 +14,7 @@ import (
 // Layer repository fokus hanya pada operasi database (Query, Insert, Update, Delete).
 type UserRepositoryInterface interface {
 	GetUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
+	FetchAllUsers(ctx context.Context) ([]entity.UserEntity, error)
 }
 
 // UserRepository adalah implementasi dari UserRepositoryInterface menggunakan GORM.
@@ -64,4 +65,33 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 		IsVerified: modelUser.IsVerified,
 	}, nil
 
+}
+
+// FetchAllUsers mengambil semua data user dari database.
+func (r *UserRepository) FetchAllUsers(ctx context.Context) ([]entity.UserEntity, error) {
+	var modelUsers []model.User
+	err := r.DB.WithContext(ctx).Preload("Roles").Find(&modelUsers).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var userEntities []entity.UserEntity
+	for _, m := range modelUsers {
+		roleName := ""
+		if len(m.Roles) > 0 {
+			roleName = m.Roles[0].Name
+		}
+
+		userEntities = append(userEntities, entity.UserEntity{
+			ID:         int64(m.ID),
+			Name:       m.Name,
+			Email:      m.Email,
+			RoleName:   roleName,
+			Address:    m.Address,
+			Phone:      m.Phone,
+			IsVerified: m.IsVerified,
+		})
+	}
+
+	return userEntities, nil
 }

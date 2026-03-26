@@ -22,8 +22,8 @@ var startCmd = &cobra.Command{
 		// 1. Inisialisasi Konfigurasi dari file .env.
 		cfg := config.NewConfig()
 
-		// 2. Membuat koneksi ke database PostgreSQL.
-		db, err := config.ConnectionPostgres(cfg)
+		// 2. Membuat koneksi ke database MySQL.
+		db, err := config.ConnectionMysql(cfg)
 		if err != nil {
 			// Jika gagal koneksi database, hentikan program aplikasi (Fatal).
 			log.Fatalf("Failed to connect to database: %v", err)
