@@ -42,7 +42,7 @@ func ConnectionMysql(cfg *Config) (*Mysql, error) {
 	}
 
 	// Automigrasi untuk membuat/menyesuaikan tabel database sesuai struct model.
-	db.AutoMigrate(&model.User{}, &model.Role{}, &model.UserRole{})
+	db.AutoMigrate(&model.User{}, &model.Role{})
 
 	// Menjalankan fungsi seeding untuk mengisi data awal (seperti Role dan Admin) secara otomatis.
 	seeds.SeedRole(db)

@@ -45,8 +45,8 @@ const doLogin = async () => {
 <template>
     <div class="login-container">
         <div class="login-card glass">
-            <h1 class="title">Admin Access</h1>
-            <p class="subtitle">Buka kunci dashboard premium Anda</p>
+            <h1 class="title">Login</h1>
+            <p class="subtitle">Buka aktivitas anda disini</p>
             
             <!-- Tampilkan pesan error jika login gagal -->
             <div v-if="error" class="error-alert">
