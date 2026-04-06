@@ -32,8 +32,8 @@ var startCmd = &cobra.Command{
 		// 3. Dependency Injection (DI):
 		// Kita menyusun objek (object) dari layer bawah ke atas.
 		// Repository (akses data) -> Service (logika bisnis) -> Handler (HTTP request).
-		userRepo := repository.NewUserRepository(db.DB) // Database dimasukkan ke Repository.
-		userService := service.NewUserService(userRepo) // Repository dimasukkan ke Service.
+		userRepo := repository.NewUserRepository(db.DB)      // Database dimasukkan ke Repository.
+		userService := service.NewUserService(userRepo, cfg) // Repository dan Config dimasukkan ke Service.
 
 		// 4. Menjalankan Server Utama dengan memasukkan Service yang sudah siap.
 		app.RunServer(userService)

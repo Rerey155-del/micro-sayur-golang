@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"user-service/config"
 	"user-service/internal/adapter/repository"
 	"user-service/internal/core/domain/entity"
 	"user-service/utils/conv"
+	"user-service/utils/jwt"
 
 	"github.com/labstack/gommon/log"
 )
@@ -21,6 +23,7 @@ type UserServiceInterface interface {
 // Struct ini berinteraksi langsung dengan repository untuk akses ke database.
 type userService struct {
 	repo repository.UserRepositoryInterface
+	cfg  *config.Config
 }
 
 // SignIn menjalankan logika untuk proses login user.
@@ -41,9 +44,14 @@ func (u *userService) SignIn(ctx context.Context, email, password string) (strin
 		return "", err
 	}
 
-	// 3. Jika email ada dan password benar, kembalikan pesan sukses.
-	// Nantinya di sini bisa ditambahkan logika untuk pembuatan token JWT.
-	return "Login successful", nil
+	// 3. Jika email ada dan password benar, generate token JWT.
+	token, err := jwt.GenerateToken(*user, u.cfg.Jwt.JwtSecretKey, u.cfg.Jwt.JwtIssuer)
+	if err != nil {
+		log.Errorf("[UserService-3] SignIn: %v", err)
+		return "", err
+	}
+
+	return token, nil
 }
 
 // FetchAllUsers mengambil semua data user.
@@ -57,6 +65,9 @@ func (u *userService) FetchAllUsers(ctx context.Context) ([]entity.UserEntity, e
 }
 
 // NewUserService adalah fungsi generator untuk membuat instance service baru.
-func NewUserService(repo repository.UserRepositoryInterface) UserServiceInterface {
-	return &userService{repo: repo}
+func NewUserService(repo repository.UserRepositoryInterface, cfg *config.Config) UserServiceInterface {
+	return &userService{
+		repo: repo,
+		cfg:  cfg,
+	}
 }

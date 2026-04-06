@@ -33,5 +33,19 @@ func SeedAdmin(db *gorm.DB) {
 		log.Fatal().Err(err).Msg("Failed to seed admin user")
 	}
 
-	log.Info().Msg("Admin user seeded successfully")
+	// Tambahan Admin Baru untuk Anda gunakan login
+	hashedPassword, _ := conv.HashPassword("password123")
+	newAdmin := model.User{
+		Name:       "Rerey Admin",
+		Email:      "rerey@admin.com",
+		Password:   hashedPassword,
+		Roles:      []model.Role{modelRole},
+		IsVerified: true,
+	}
+
+	if err := db.FirstOrCreate(&newAdmin, model.User{Email: "rerey@admin.com"}).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to seed additional admin user")
+	}
+
+	log.Info().Msg("Admin users seeded successfully")
 }
