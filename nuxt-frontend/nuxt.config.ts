@@ -7,5 +7,5 @@ export default defineNuxtConfig({
       userApiBase: 'http://127.0.0.1:8085'
     }
   },
-  css: ['~/assets/css/main.css']
+  css: ['~/assets/css/admin.css']
 })
