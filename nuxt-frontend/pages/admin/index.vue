@@ -3,19 +3,26 @@ definePageMeta({
   layout: 'admin'
 })
 
-// Mock data statistics
-const stats = [
-  { title: 'Total Produk', value: '124', color: '#10b981' },
-  { title: 'Pesanan Baru', value: '12', color: '#3b82f6' },
-  { title: 'Total Pelanggan', value: '850', color: '#8b5cf6' },
-  { title: 'Pendapatan (Rp)', value: '4.5M', color: '#f59e0b' }
-]
+const config = useRuntimeConfig()
 
-const recentActivities = [
-  { id: 1, action: 'Pesanan masuk #1024', time: '5 menit yang lalu', color: '#3b82f6' },
-  { id: 2, action: 'Produk "Bayam Organik" stok menipis', time: '1 jam yang lalu', color: '#ef4444' },
-  { id: 3, action: 'Pengguna baru terdaftar', time: '3 jam yang lalu', color: '#10b981' }
-]
+// Ambil data produk dan user secara paralel
+const { data: productsData } = await useFetch(`${config.public.apiBase}/products`)
+const { data: usersData } = await useFetch(`${config.public.userApiBase}/users`)
+
+// Hitung statistik riil
+const totalProduk = computed(() => productsData.value?.data?.length || 0)
+const totalPelanggan = computed(() => usersData.value?.data?.length || 0)
+
+// Data statistik untuk ditampilkan di kartu
+const stats = computed(() => [
+  { title: 'Total Produk', value: totalProduk.value.toString(), color: '#10b981' },
+  { title: 'Pesanan Baru', value: '0', color: '#3b82f6' },
+  { title: 'Total Pelanggan', value: totalPelanggan.value.toString(), color: '#8b5cf6' },
+  { title: 'Pendapatan (Rp)', value: '0', color: '#f59e0b' }
+])
+
+// Kosongkan aktivitas terbaru sesuai permintaan
+const recentActivities = ref([])
 </script>
 
 <template>
@@ -35,6 +42,9 @@ const recentActivities = [
     <div class="glass-panel">
       <h3>Aktivitas Terbaru</h3>
       <div class="activity-list">
+        <div v-if="recentActivities.length === 0" style="color: #94a3b8; text-align: center; padding: 20px;">
+          Belum ada aktivitas saat ini.
+        </div>
         <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
           <div class="bullet" :style="{ backgroundColor: activity.color }"></div>
           <div class="info">{{ activity.action }}</div>

@@ -3,12 +3,20 @@ definePageMeta({
   layout: 'admin'
 })
 
-// Mock data produk
-const products = [
-  { id: 1, name: 'Bayam Organik', category: 'Sayuran', price: 'Rp 5.000', stock: 50 },
-  { id: 2, name: 'Tomat Merah', category: 'Sayuran', price: 'Rp 8.000', stock: 30 },
-  { id: 3, name: 'Apel Fuji', category: 'Buah', price: 'Rp 15.000', stock: 20 },
-]
+// Ambil konfigurasi API dari nuxt.config.ts
+const config = useRuntimeConfig()
+
+// Ambil data produk dari Product Service (port 8081)
+const { data: productsData, pending, error } = await useFetch(`${config.public.apiBase}/products`)
+
+// Fungsi pembantu untuk format mata uang Rupiah
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value)
+}
 </script>
 
 <template>
@@ -18,32 +26,51 @@ const products = [
       <p>Manajemen stok dan harga produk Anda.</p>
     </div>
 
-    <div class="glass-panel">
+    <!-- Tampilkan Loading jika data sedang dimuat -->
+    <div v-if="pending" class="glass-panel" style="text-align: center; padding: 40px;">
+      <p>Sedang memuat data produk...</p>
+    </div>
+
+    <!-- Tampilkan Error jika gagal mengambil data -->
+    <div v-else-if="error" class="glass-panel" style="text-align: center; color: #ef4444; padding: 40px;">
+      <p>Gagal mengambil data produk: {{ error.message }}</p>
+    </div>
+
+    <!-- Tampilkan data jika sukses -->
+    <div v-else class="glass-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3>Daftar Produk</h3>
+        <h3>Daftar Produk ({{ productsData?.data?.length || 0 }})</h3>
         <button class="btn-primary" style="width: auto; padding: 10px 20px;">+ Tambah Produk</button>
       </div>
       
-      <table style="width: 100%; border-collapse: collapse; color: #cbd5e1;">
-        <thead>
-          <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <th style="padding: 12px;">ID</th>
-            <th style="padding: 12px;">Nama</th>
-            <th style="padding: 12px;">Kategori</th>
-            <th style="padding: 12px;">Harga</th>
-            <th style="padding: 12px;">Stok</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="p in products" :key="p.id" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <td style="padding: 12px;">{{ p.id }}</td>
-            <td style="padding: 12px;">{{ p.name }}</td>
-            <td style="padding: 12px;">{{ p.category }}</td>
-            <td style="padding: 12px;">{{ p.price }}</td>
-            <td style="padding: 12px;">{{ p.stock }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nama</th>
+              <th>Deskripsi</th>
+              <th>Harga</th>
+              <th>Stok</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="p in productsData?.data" :key="p.id">
+              <td>{{ p.id }}</td>
+              <td>{{ p.name }}</td>
+              <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ p.description || '-' }}
+              </td>
+              <td>{{ formatCurrency(p.price) }}</td>
+              <td>
+                <span :style="{ color: p.stock < 10 ? '#ef4444' : '#10b981', fontWeight: 'bold' }">
+                  {{ p.stock }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
