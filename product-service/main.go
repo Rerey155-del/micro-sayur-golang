@@ -31,6 +31,9 @@ func main() {
 	app.Use(logger.New())
 	app.Use(cors.New()) // Aktifkan CORS agar Frontend bisa memanggil API ini
 
+	// Menyajikan folder uploads agar bisa diakses langsung via HTTP
+	app.Static("/uploads", "./uploads")
+
 	// 5. Register Routes
 	handler.NewProductHandler(app, productUsecase)
 

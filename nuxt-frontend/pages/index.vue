@@ -40,7 +40,7 @@ const submitForm = async () => {
                 
                 // Cek role untuk navigasi
                 if (response.data.role === 'Customer') {
-                    navigateTo('/home') // Halaman landing page untuk user/customer
+                    navigateTo('/customer/home') // Halaman landing page untuk user/customer
                 } else {
                     navigateTo('/admin') // Halaman dashboard admin
                 }

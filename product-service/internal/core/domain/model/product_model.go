@@ -7,4 +7,5 @@ type Product struct {
 	Description string  `gorm:"type:text" json:"description"`
 	Price       float64 `gorm:"type:decimal(10,2);not null" json:"price"`
 	Stock       int     `gorm:"type:int;not null" json:"stock"`
+	ImageURL    string  `gorm:"type:varchar(255)" json:"image_url"`
 }

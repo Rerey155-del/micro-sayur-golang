@@ -1,4 +1,6 @@
 <script setup>
+const props = defineProps(['isOpen'])
+
 const doLogout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user_name");
@@ -7,7 +9,7 @@ const doLogout = () => {
 </script>
 
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ 'is-open': isOpen }">
     <div class="sidebar-brand">
       <h2>Micro<span>sayur</span></h2>
     </div>
@@ -118,5 +120,16 @@ const doLogout = () => {
 .btn-logout:hover {
   background: #ef4444;
   color: white;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    left: -260px;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.is-open {
+    left: 0;
+  }
 }
 </style>

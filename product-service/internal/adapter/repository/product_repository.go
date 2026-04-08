@@ -11,6 +11,7 @@ import (
 // Kontrak yang harus dipatuhi oleh repository
 type ProductRepositoryInterface interface {
 	GetAllProducts(ctx context.Context) ([]*entity.ProductEntity, error)
+	CreateProduct(ctx context.Context, product *model.Product) error
 }
 
 // Struct yang mengimplementasikan kontrak di atas menggunakan GORM DB
@@ -42,8 +43,13 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context) ([]*entity.Produ
 			Description: p.Description,
 			Price:       p.Price,
 			Stock:       p.Stock,
+			ImageURL:    p.ImageURL,
 		})
 	}
 
 	return productEntities, nil
+}
+
+func (r *ProductRepository) CreateProduct(ctx context.Context, product *model.Product) error {
+	return r.DB.WithContext(ctx).Create(product).Error
 }

@@ -2,6 +2,11 @@
 import { ref, onMounted } from "vue";
 
 const adminName = ref("Admin");
+const isSidebarOpen = ref(false);
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value;
+};
 
 onMounted(() => {
   const name = localStorage.getItem("user_name");
@@ -13,11 +18,21 @@ onMounted(() => {
 
 <template>
   <div class="admin-layout">
-    <AdminSidebar />
+    <AdminSidebar :isOpen="isSidebarOpen" @click="isSidebarOpen = false" />
+    
+    <!-- Overlay for mobile -->
+    <div v-if="isSidebarOpen" class="sidebar-overlay" @click="isSidebarOpen = false"></div>
+
     <!-- konten kanan -->
     <main class="main-wrapper">
       <header class="topbar">
         <div class="topbar-left">
+          <!-- Hamburger Menu Button -->
+          <button class="hamburger-btn" @click="toggleSidebar">
+             <div class="bar"></div>
+             <div class="bar"></div>
+             <div class="bar"></div>
+          </button>
           <h3>Panel Administrator</h3>
         </div>
         <div class="topbar-right">
@@ -116,5 +131,54 @@ onMounted(() => {
   padding: 40px;
   flex: 1;
   overflow-y: auto;
+}
+
+/* Mobile Responsive */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+.hamburger-btn .bar {
+  width: 22px;
+  height: 2px;
+  background-color: var(--text-main);
+  border-radius: 2px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9;
+}
+
+@media (max-width: 1024px) {
+  .main-wrapper {
+    margin-left: 0;
+  }
+  
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .topbar {
+    padding: 0 20px;
+  }
+
+  .content-area {
+    padding: 20px;
+  }
 }
 </style>
