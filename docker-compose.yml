@@ -1,0 +1,113 @@
+version: '3.9'
+
+networks:
+  microsayur-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  product-uploads:
+
+services:
+  # ============================================================
+  # MySQL Database (shared by all services)
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: microsayur-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: sayur
+      MYSQL_PASSWORD: sayurpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Init script creates both databases on first run
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3307:3306"
+    networks:
+      - microsayur-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # User Service (Port 8085)
+  # ============================================================
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: microsayur-user-service
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_PORT: 8085
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: sayur-user-service
+      DATABASE_USER: root
+      DATABASE_PASSWORD: root
+      DATABASE_MAX_OPEN_CONNECTION: 100
+      DATABASE_MAX_IDLE_CONNECTION: 10
+      JWT_SECRET_KEY: supersecretkeysayur
+      JWT_ISSUER: micro-sayur
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - microsayur-network
+
+  # ============================================================
+  # Product Service (Port 8081)
+  # ============================================================
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: microsayur-product-service
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_PORT: 8081
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: sayur-product-service
+      DATABASE_USER: root
+      DATABASE_PASSWORD: root
+      DATABASE_MAX_OPEN_CONNECTION: 100
+      DATABASE_MAX_IDLE_CONNECTION: 10
+    ports:
+      - "8081:8081"
+    volumes:
+      - product-uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - microsayur-network
+
+  # ============================================================
+  # Nuxt Frontend (Port 3000)
+  # ============================================================
+  frontend:
+    build:
+      context: ./nuxt-frontend
+      dockerfile: Dockerfile
+    container_name: microsayur-frontend
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_API_BASE: http://product-service:8081/api/v1
+      NUXT_PUBLIC_USER_API_BASE: http://user-service:8085
+    ports:
+      - "3000:3000"
+    # depends_on:
+    #   - user-service
+    #   - product-service
+    networks:
+      - microsayur-network
