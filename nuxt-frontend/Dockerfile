@@ -1,13 +1,10 @@
 # --- Build Stage ---
-FROM node:18-alpine AS builder
-
-# Set npm registry to use HTTP or skip SSL if necessary due to local network certificate issues
-RUN npm config set strict-ssl false
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm config set strict-ssl false && npm install
 
 COPY . .
 
@@ -15,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # --- Runtime Stage ---
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 

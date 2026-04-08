@@ -106,8 +106,8 @@ services:
       NUXT_PUBLIC_USER_API_BASE: http://user-service:8085
     ports:
       - "3000:3000"
-    # depends_on:
-    #   - user-service
-    #   - product-service
+#    depends_on:
+#      - user-service
+#      - product-service
     networks:
       - microsayur-network
