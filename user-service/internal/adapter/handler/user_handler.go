@@ -5,6 +5,7 @@ import (
 
 	"user-service/internal/adapter/handler/request"
 	"user-service/internal/adapter/handler/response"
+	"user-service/internal/core/domain/entity"
 	"user-service/internal/core/service"
 
 	"github.com/labstack/echo/v4"
@@ -17,6 +18,7 @@ import (
 type UserHandlerInterface interface {
 	SignIn(c echo.Context) error
 	GetUsers(c echo.Context) error
+	SignUp(c echo.Context) error
 }
 
 // userHandler adalah implementasi dari UserHandlerInterface.
@@ -47,7 +49,7 @@ func (u *userHandler) SignIn(c echo.Context) error {
 	}
 
 	// Memanggil layer service untuk mengecek apakah email dan password benar.
-	token, err := u.userService.SignIn(
+	token, user, err := u.userService.SignIn(
 		c.Request().Context(),
 		req.Email,
 		req.Password,
@@ -60,8 +62,18 @@ func (u *userHandler) SignIn(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resp)
 	}
 
-	// Jika berhasil, masukkan token ke dalam struct response.
+	// Jika berhasil, masukkan token dan data user ke dalam struct response.
 	respSignIn.AccessToken = token
+	if user != nil {
+		respSignIn.ID = user.ID
+		respSignIn.Name = user.Name
+		respSignIn.Email = user.Email
+		respSignIn.Role = user.RoleName
+		respSignIn.Lat = user.Lat
+		respSignIn.Lng = user.Lng
+		respSignIn.IsVerified = user.IsVerified
+	}
+	
 	resp.Message = "User signed in successfully"
 	resp.Data = respSignIn
 
@@ -84,6 +96,43 @@ func (u *userHandler) GetUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// SignUp menangani request untuk mendaftarkan user baru.
+func (u *userHandler) SignUp(c echo.Context) error {
+	req := request.SignUpRequest{}
+	resp := response.DefaultResponse{}
+
+	if err := c.Bind(&req); err != nil {
+		log.Errorf("[UserHandler] SignUp Bind: %v", err)
+		resp.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	if err := c.Validate(req); err != nil {
+		log.Errorf("[UserHandler] SignUp Validate: %v", err)
+		resp.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	// Mapping Request to Entity
+	userEnt := &entity.UserEntity{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+		RoleName: req.RoleName,
+	}
+
+	err := u.userService.SignUp(c.Request().Context(), userEnt)
+	if err != nil {
+		log.Errorf("[UserHandler] SignUp Service: %v", err)
+		resp.Message = err.Error()
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	resp.Message = "User registered successfully"
+	return c.JSON(http.StatusCreated, resp)
+}
+
+
 // NewUserHandler adalah fungsi generator untuk membuat instance handler baru dan mendaftarkan route-nya ke Echo.
 func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface) UserHandlerInterface {
 	userHandler := &userHandler{
@@ -93,8 +142,9 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface) User
 	// middleware.Recover() mencegah aplikasi crash total jika terjadi panic/error fatal di handler.
 	e.Use(middleware.Recover())
 
-	// Mendaftarkan endpoint POST /signin ke fungsi handler SignIn.
+	// Mendaftarkan endpoint
 	e.POST("/signin", userHandler.SignIn)
+	e.POST("/signup", userHandler.SignUp)
 	e.GET("/users", userHandler.GetUsers)
 
 	return userHandler

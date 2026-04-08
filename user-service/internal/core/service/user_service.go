@@ -15,8 +15,9 @@ import (
 // UserServiceInterface mendefinisikan kontrak logika bisnis untuk user.
 // Service bertanggung jawab untuk aturan bisnis, seperti validasi password, enkripsi, dll.
 type UserServiceInterface interface {
-	SignIn(ctx context.Context, email, password string) (string, error)
+	SignIn(ctx context.Context, email, password string) (string, *entity.UserEntity, error)
 	FetchAllUsers(ctx context.Context) ([]entity.UserEntity, error)
+	SignUp(ctx context.Context, user *entity.UserEntity) error
 }
 
 // userService adalah implementasi dari UserServiceInterface.
@@ -27,13 +28,13 @@ type userService struct {
 }
 
 // SignIn menjalankan logika untuk proses login user.
-func (u *userService) SignIn(ctx context.Context, email, password string) (string, error) {
+func (u *userService) SignIn(ctx context.Context, email, password string) (string, *entity.UserEntity, error) {
 	// 1. Meminta repository untuk mencari data user berdasarkan email.
 	user, err := u.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		// Log error jika user tidak ditemukan atau terjadi kesalahan database.
 		log.Errorf("[UserService-1] SignIn: %v", err)
-		return "", err
+		return "", nil, err
 	}
 
 	// 2. Membandingkan password yang diinput user dengan password (hash) di database.
@@ -41,17 +42,17 @@ func (u *userService) SignIn(ctx context.Context, email, password string) (strin
 	if checkPass := conv.CheckPasswordHash(password, user.Password); !checkPass {
 		err = errors.New("password is incorrect")
 		log.Errorf("[UserService-1] SignIn: %v", err)
-		return "", err
+		return "", nil, err
 	}
 
 	// 3. Jika email ada dan password benar, generate token JWT.
 	token, err := jwt.GenerateToken(*user, u.cfg.Jwt.JwtSecretKey, u.cfg.Jwt.JwtIssuer)
 	if err != nil {
 		log.Errorf("[UserService-3] SignIn: %v", err)
-		return "", err
+		return "", nil, err
 	}
 
-	return token, nil
+	return token, user, nil
 }
 
 // FetchAllUsers mengambil semua data user.
@@ -62,6 +63,28 @@ func (u *userService) FetchAllUsers(ctx context.Context) ([]entity.UserEntity, e
 		return nil, err
 	}
 	return users, nil
+}
+
+// SignUp memproses logika pendaftaran user baru.
+func (u *userService) SignUp(ctx context.Context, user *entity.UserEntity) error {
+	// Lakukan hashing pada password sebelum disimpan (keamanan)
+	hashedPassword, err := conv.HashPassword(user.Password)
+	if err != nil {
+		log.Errorf("[UserService] SignUp - HashPassword error: %v", err)
+		return err
+	}
+	
+	// Update entitas user dengan password yang sudah di-hash
+	user.Password = hashedPassword
+
+	// Simpan ke database melalui repository
+	err = u.repo.CreateUser(ctx, user)
+	if err != nil {
+		log.Errorf("[UserService] SignUp - CreateUser error: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // NewUserService adalah fungsi generator untuk membuat instance service baru.

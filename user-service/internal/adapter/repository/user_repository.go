@@ -15,6 +15,7 @@ import (
 type UserRepositoryInterface interface {
 	GetUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
 	FetchAllUsers(ctx context.Context) ([]entity.UserEntity, error)
+	CreateUser(ctx context.Context, user *entity.UserEntity) error
 }
 
 // UserRepository adalah implementasi dari UserRepositoryInterface menggunakan GORM.
@@ -94,4 +95,27 @@ func (r *UserRepository) FetchAllUsers(ctx context.Context) ([]entity.UserEntity
 	}
 
 	return userEntities, nil
+}
+
+// CreateUser mendaftarkan user baru ke dalam database dan mengaitkannya dengan Role.
+func (r *UserRepository) CreateUser(ctx context.Context, user *entity.UserEntity) error {
+	// Dapatkan role berdasarkan RoleName
+	var role model.Role
+	err := r.DB.WithContext(ctx).Where("name = ?", user.RoleName).First(&role).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("role not found")
+		}
+		return err
+	}
+
+	modelUser := model.User{
+		Name:       user.Name,
+		Email:      user.Email,
+		Password:   user.Password,
+		IsVerified: true, // Auto verifikasi untuk kemudahan
+		Roles:      []model.Role{role},
+	}
+
+	return r.DB.WithContext(ctx).Create(&modelUser).Error
 }
