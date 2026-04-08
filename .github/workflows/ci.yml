@@ -114,7 +114,6 @@ jobs:
         with:
           context: ./user-service
           push: false
-          tags: ${{ secrets.DOCKER_USERNAME }}/microsayur-user-service:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -123,7 +122,6 @@ jobs:
         with:
           context: ./product-service
           push: false
-          tags: ${{ secrets.DOCKER_USERNAME }}/microsayur-product-service:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -132,6 +130,5 @@ jobs:
         with:
           context: ./nuxt-frontend
           push: false
-          tags: ${{ secrets.DOCKER_USERNAME }}/microsayur-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
