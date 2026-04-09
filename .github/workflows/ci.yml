@@ -25,7 +25,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.25.5'
 
       - name: Download Go dependencies
         run: go mod download
@@ -52,7 +52,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.25.5'
 
       - name: Download Go dependencies
         run: go mod download
@@ -114,6 +114,7 @@ jobs:
         with:
           context: ./user-service
           push: false
+          tags: microsayur/user-service:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -122,6 +123,7 @@ jobs:
         with:
           context: ./product-service
           push: false
+          tags: microsayur/product-service:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -130,5 +132,6 @@ jobs:
         with:
           context: ./nuxt-frontend
           push: false
+          tags: microsayur/frontend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max

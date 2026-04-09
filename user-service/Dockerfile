@@ -6,6 +6,9 @@ ENV GONOSUMDB="*"
 ENV GOINSECURE="*"
 ENV GOPRIVATE="*"
 
+# Install git and certificates for fetching dependencies
+RUN apk add --no-cache git ca-certificates
+
 # Download dependencies first for better caching
 COPY go.mod go.sum ./
 RUN go mod download
