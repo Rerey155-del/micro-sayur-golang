@@ -33,7 +33,7 @@ onMounted(() => {
              <div class="bar"></div>
              <div class="bar"></div>
           </button>
-          <h3>Panel Administrator nya</h3>
+          <h3>Panel Administrator</h3>
         </div>
         <div class="topbar-right">
           <div class="user-profile">
