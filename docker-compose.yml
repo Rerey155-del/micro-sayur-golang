@@ -93,6 +93,34 @@ services:
       - microsayur-network
 
   # ============================================================
+  # Order Service (Port 8082)
+  # ============================================================
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: microsayur-order-service
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_PORT: 8082
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: sayur-order-service
+      DATABASE_USER: root
+      DATABASE_PASSWORD: root
+      DATABASE_MAX_OPEN_CONNECTION: 100
+      DATABASE_MAX_IDLE_CONNECTION: 10
+      JWT_SECRET_KEY: supersecretkeysayur
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - microsayur-network
+
+  # ============================================================
   # Nuxt Frontend (Port 3000)
   # ============================================================
   frontend:
@@ -104,10 +132,12 @@ services:
     environment:
       NUXT_PUBLIC_API_BASE: http://product-service:8081/api/v1
       NUXT_PUBLIC_USER_API_BASE: http://user-service:8085
+      NUXT_PUBLIC_ORDER_API_BASE: http://order-service:8082/api/v1
     ports:
       - "3000:3000"
 #    depends_on:
 #      - user-service
 #      - product-service
+#      - order-service
     networks:
       - microsayur-network
