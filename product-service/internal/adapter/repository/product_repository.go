@@ -12,6 +12,8 @@ import (
 type ProductRepositoryInterface interface {
 	GetAllProducts(ctx context.Context) ([]*entity.ProductEntity, error)
 	CreateProduct(ctx context.Context, product *model.Product) error
+	UpdateProduct(ctx context.Context, product *model.Product) error
+	DeleteProduct(ctx context.Context, id uint) error
 }
 
 // Struct yang mengimplementasikan kontrak di atas menggunakan GORM DB
@@ -52,4 +54,12 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context) ([]*entity.Produ
 
 func (r *ProductRepository) CreateProduct(ctx context.Context, product *model.Product) error {
 	return r.DB.WithContext(ctx).Create(product).Error
+}
+
+func (r *ProductRepository) UpdateProduct(ctx context.Context, product *model.Product) error {
+	return r.DB.WithContext(ctx).Save(product).Error
+}
+
+func (r *ProductRepository) DeleteProduct(ctx context.Context, id uint) error {
+	return r.DB.WithContext(ctx).Delete(&model.Product{}, id).Error
 }

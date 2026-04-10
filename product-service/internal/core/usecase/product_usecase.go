@@ -11,6 +11,8 @@ import (
 type ProductUsecaseInterface interface {
 	FetchAllProducts(ctx context.Context) ([]*entity.ProductEntity, error)
 	CreateProduct(ctx context.Context, name, description string, price float64, stock int, imageURL string) error
+	UpdateProduct(ctx context.Context, id uint, name, description string, price float64, stock int, imageURL string) error
+	DeleteProduct(ctx context.Context, id uint) error
 }
 
 type ProductUsecase struct {
@@ -35,4 +37,20 @@ func (uc *ProductUsecase) CreateProduct(ctx context.Context, name, description s
 		ImageURL:    imageURL,
 	}
 	return uc.repo.CreateProduct(ctx, productModel)
+}
+
+func (uc *ProductUsecase) UpdateProduct(ctx context.Context, id uint, name, description string, price float64, stock int, imageURL string) error {
+	productModel := &productModel.Product{
+		ID:          id,
+		Name:        name,
+		Description: description,
+		Price:       price,
+		Stock:       stock,
+		ImageURL:    imageURL,
+	}
+	return uc.repo.UpdateProduct(ctx, productModel)
+}
+
+func (uc *ProductUsecase) DeleteProduct(ctx context.Context, id uint) error {
+	return uc.repo.DeleteProduct(ctx, id)
 }

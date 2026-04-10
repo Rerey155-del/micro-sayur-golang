@@ -25,8 +25,10 @@ const getImageUrl = (path) => {
   return `${baseUrl}${path}`
 }
 
-// ------------ STATE MODAL TAMBAH PRODUK ------------
+// ------------ STATE MODAL PRODUK ------------
 const isModalOpen = ref(false)
+const isEditMode = ref(false)
+const currentEditId = ref(null)
 const isSubmitting = ref(false)
 const formError = ref('')
 
@@ -44,6 +46,30 @@ const handleFileChange = (e) => {
   }
 }
 
+const openAddModal = () => {
+  isEditMode.value = false
+  currentEditId.value = null
+  form.name = ''
+  form.description = ''
+  form.price = ''
+  form.stock = ''
+  form.image = null
+  formError.value = ''
+  isModalOpen.value = true
+}
+
+const openEditModal = (product) => {
+  isEditMode.value = true
+  currentEditId.value = product.id
+  form.name = product.name
+  form.description = product.description
+  form.price = product.price
+  form.stock = product.stock
+  form.image = null // reset image field for edit
+  formError.value = ''
+  isModalOpen.value = true
+}
+
 const submitProduct = async () => {
   isSubmitting.value = true
   formError.value = ''
@@ -51,16 +77,21 @@ const submitProduct = async () => {
   const formData = new FormData()
   formData.append('name', form.name)
   formData.append('description', form.description)
-  // Ensure we send string representations
   formData.append('price', form.price.toString())
   formData.append('stock', form.stock.toString())
   if (form.image) {
     formData.append('image', form.image)
   }
 
+  const url = isEditMode.value 
+    ? `${config.public.apiBase}/products/${currentEditId.value}`
+    : `${config.public.apiBase}/products`
+  
+  const method = isEditMode.value ? 'PUT' : 'POST'
+
   try {
-     const { error: apiError } = await useFetch(`${config.public.apiBase}/products`, {
-       method: 'POST',
+     const { error: apiError } = await useFetch(url, {
+       method: method,
        body: formData
      })
      
@@ -68,21 +99,30 @@ const submitProduct = async () => {
         throw new Error(apiError.value.data?.error || 'Gagal menyimpan produk')
      }
      
-     // Jika sukses
      isModalOpen.value = false
-     // Reset form
-     form.name = ''
-     form.description = ''
-     form.price = ''
-     form.stock = ''
-     form.image = null
-     
-     // Referensikan ulang daftar produk dari server
      await refresh()
   } catch (e) {
      formError.value = e.message
   } finally {
      isSubmitting.value = false
+  }
+}
+
+const confirmDelete = async (id, name) => {
+  if (confirm(`Apakah Anda yakin ingin menghapus produk "${name}"?`)) {
+    try {
+      const { error: apiError } = await useFetch(`${config.public.apiBase}/products/${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (apiError.value) {
+        throw new Error(apiError.value.data?.error || 'Gagal menghapus produk')
+      }
+      
+      await refresh()
+    } catch (e) {
+      alert(e.message)
+    }
   }
 }
 </script>
@@ -108,7 +148,7 @@ const submitProduct = async () => {
     <div v-else class="glass-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3>Daftar Produk ({{ productsData?.data?.length || 0 }})</h3>
-        <button class="btn-primary" style="width: auto; padding: 10px 20px;" @click="isModalOpen = true">+ Tambah Produk</button>
+        <button class="btn-primary" style="width: auto; padding: 10px 20px;" @click="openAddModal">+ Tambah Produk</button>
       </div>
       
       <div class="table-container">
@@ -121,6 +161,7 @@ const submitProduct = async () => {
               <th>Deskripsi</th>
               <th>Harga</th>
               <th>Stok</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -140,16 +181,26 @@ const submitProduct = async () => {
                   {{ p.stock }}
                 </span>
               </td>
+              <td>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn-edit" @click="openEditModal(p)" title="Edit">
+                    Edit
+                  </button>
+                  <button class="btn-delete" @click="confirmDelete(p.id, p.name)" title="Hapus">
+                    Hapus
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- MODAL TAMBAH PRODUK -->
+    <!-- MODAL PRODUK -->
     <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
       <div class="modal-content glass-panel" style="margin-top: 0; padding: 32px; width: 100%; max-width: 500px; animation: slideIn 0.3s ease-out;">
-        <h3 style="margin-top: 0; margin-bottom: 24px;">Tambah Produk Baru</h3>
+        <h3 style="margin-top: 0; margin-bottom: 24px;">{{ isEditMode ? 'Edit Produk' : 'Tambah Produk Baru' }}</h3>
 
         <div v-if="formError" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">
           {{ formError }}
@@ -184,7 +235,7 @@ const submitProduct = async () => {
           <div style="display: flex; gap: 12px; margin-top: 32px;">
             <button type="button" @click="isModalOpen = false" class="btn-secondary" style="flex: 1;">Batal</button>
             <button type="submit" class="btn-primary" style="flex: 1;" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Menyimpan...' : 'Simpan Produk' }}
+              {{ isSubmitting ? 'Menyimpan...' : (isEditMode ? 'Simpan Perubahan' : 'Tambah Produk') }}
             </button>
           </div>
         </form>
@@ -298,6 +349,40 @@ tr:hover td {
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.btn-edit {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-edit:hover {
+  background: #0ea5e9;
+  color: white;
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-delete:hover {
+  background: #ef4444;
   color: white;
 }
 
