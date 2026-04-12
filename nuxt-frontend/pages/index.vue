@@ -35,7 +35,9 @@ const submitForm = async () => {
 
             if (response.data && response.data.access_token) {
                 localStorage.setItem('token', response.data.access_token)
+                localStorage.setItem('user_id', String(response.data.id || ''))
                 localStorage.setItem('user_name', response.data.name || 'User')
+                localStorage.setItem('user_email', response.data.email || '')
                 localStorage.setItem('user_role', response.data.role)
                 
                 // Cek role untuk navigasi

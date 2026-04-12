@@ -8,6 +8,18 @@ const config = useRuntimeConfig()
 // Ambil data produk
 const { data: productsData, pending, error } = await useFetch(`${config.public.apiBase}/products`)
 
+const isOrderModalOpen = ref(false)
+const isSubmittingOrder = ref(false)
+const orderError = ref('')
+const orderSuccess = ref('')
+const selectedProduct = ref(null)
+
+const orderForm = reactive({
+  quantity: 1,
+  address: '',
+  notes: ''
+})
+
 // Format mata uang
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0'
@@ -28,6 +40,72 @@ const getImageUrl = (path) => {
 const logout = () => {
     localStorage.clear()
     navigateTo('/')
+}
+
+const openOrderModal = (product) => {
+    selectedProduct.value = product
+    orderForm.quantity = 1
+    orderForm.address = ''
+    orderForm.notes = ''
+    orderError.value = ''
+    orderSuccess.value = ''
+    isOrderModalOpen.value = true
+}
+
+const closeOrderModal = () => {
+    isOrderModalOpen.value = false
+    selectedProduct.value = null
+}
+
+const selectedSubtotal = computed(() => {
+    if (!selectedProduct.value) return 0
+    return Number(selectedProduct.value.price) * Number(orderForm.quantity || 0)
+})
+
+const submitOrder = async () => {
+    if (!selectedProduct.value) return
+
+    const userId = Number(localStorage.getItem('user_id') || 0)
+    const userName = localStorage.getItem('user_name') || 'Pelanggan'
+
+    if (!userId) {
+        orderError.value = 'Sesi login tidak lengkap. Silakan login ulang.'
+        return
+    }
+
+    isSubmittingOrder.value = true
+    orderError.value = ''
+    orderSuccess.value = ''
+
+    try {
+        await $fetch(`${config.public.orderApiBase}/orders`, {
+            method: 'POST',
+            body: {
+                user_id: userId,
+                customer_name: userName,
+                address: orderForm.address,
+                notes: orderForm.notes,
+                items: [
+                    {
+                        product_id: selectedProduct.value.id,
+                        product_name: selectedProduct.value.name,
+                        product_price: Number(selectedProduct.value.price),
+                        quantity: Number(orderForm.quantity)
+                    }
+                ]
+            }
+        })
+
+        orderSuccess.value = 'Pesanan berhasil dibuat.'
+        setTimeout(() => {
+            closeOrderModal()
+            navigateTo('/customer/pesanan')
+        }, 900)
+    } catch (err) {
+        orderError.value = err?.data?.error || err?.message || 'Gagal membuat pesanan'
+    } finally {
+        isSubmittingOrder.value = false
+    }
 }
 
 const isMenuOpen = ref(false)
@@ -89,11 +167,62 @@ const toggleMenu = () => {
                                 Sisa Stok: {{ product.stock }}
                             </span>
                         </div>
-                        <button class="btn-add-cart">Beli Sekarang</button>
+                        <button class="btn-add-cart" :disabled="product.stock < 1" @click="openOrderModal(product)">
+                            {{ product.stock < 1 ? 'Stok Habis' : 'Beli Sekarang' }}
+                        </button>
                     </div>
                 </div>
             </div>
         </section>
+
+        <div v-if="isOrderModalOpen && selectedProduct" class="modal-overlay" @click.self="closeOrderModal">
+            <div class="order-modal glass">
+                <div class="modal-head">
+                    <div>
+                        <p class="eyebrow">Checkout Cepat</p>
+                        <h3>{{ selectedProduct.name }}</h3>
+                    </div>
+                    <button class="modal-close" @click="closeOrderModal">×</button>
+                </div>
+
+                <div class="order-summary">
+                    <span>Harga</span>
+                    <strong>{{ formatCurrency(selectedProduct.price) }}</strong>
+                </div>
+
+                <div v-if="orderError" class="alert alert-error">{{ orderError }}</div>
+                <div v-if="orderSuccess" class="alert alert-success">{{ orderSuccess }}</div>
+
+                <form class="order-form" @submit.prevent="submitOrder">
+                    <label>
+                        Jumlah
+                        <input v-model="orderForm.quantity" type="number" min="1" :max="selectedProduct.stock" required>
+                    </label>
+
+                    <label>
+                        Alamat Pengiriman
+                        <textarea v-model="orderForm.address" rows="3" placeholder="Contoh: Jl. Melati No. 12, Jakarta" required></textarea>
+                    </label>
+
+                    <label>
+                        Catatan
+                        <textarea v-model="orderForm.notes" rows="2" placeholder="Opsional, misalnya minta dikirim sore"></textarea>
+                    </label>
+
+                    <div class="order-total">
+                        <span>Total</span>
+                        <strong>{{ formatCurrency(selectedSubtotal) }}</strong>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" @click="closeOrderModal">Batal</button>
+                        <button type="submit" class="btn-add-cart" :disabled="isSubmittingOrder">
+                            {{ isSubmittingOrder ? 'Memproses...' : 'Buat Pesanan' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -323,6 +452,130 @@ const toggleMenu = () => {
     color: white;
 }
 
+.btn-add-cart:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    width: 100%;
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 1200;
+}
+
+.order-modal {
+    width: min(100%, 520px);
+    border-radius: 24px;
+    padding: 28px;
+}
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.modal-head h3 {
+    margin: 4px 0 0;
+    font-size: 28px;
+}
+
+.eyebrow {
+    margin: 0;
+    color: var(--primary);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.modal-close {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-main);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.order-summary,
+.order-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+}
+
+.order-form {
+    display: grid;
+    gap: 16px;
+}
+
+.order-form label {
+    display: grid;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.order-form input,
+.order-form textarea {
+    width: 100%;
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.18);
+    color: var(--text-main);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: inherit;
+}
+
+.modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.alert {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.alert-error {
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.alert-success {
+    color: #bbf7d0;
+    background: rgba(16, 185, 129, 0.16);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
 /* Hamburger Styles */
 .hamburger {
     display: none;
@@ -393,6 +646,10 @@ const toggleMenu = () => {
         width: 100%;
         padding: 16px;
         font-size: 18px;
+    }
+
+    .modal-actions {
+        grid-template-columns: 1fr;
     }
 }
 </style>

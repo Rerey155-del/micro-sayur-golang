@@ -3,7 +3,10 @@ const props = defineProps(['isOpen'])
 
 const doLogout = () => {
   localStorage.removeItem("token");
+  localStorage.removeItem("user_id");
   localStorage.removeItem("user_name");
+  localStorage.removeItem("user_email");
+  localStorage.removeItem("user_role");
   navigateTo("/");
 };
 </script>
