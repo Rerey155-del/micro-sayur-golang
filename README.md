@@ -162,36 +162,3 @@ npm run dev
 3. Admin memantau daftar pesanan
 4. Admin mengubah status pesanan
 
-## Catatan Teknis
-
-- `product-service` menyajikan file gambar dari folder `uploads`
-- `order-service` menyimpan snapshot item order di tabel `order_items`
-- Frontend customer dan admin sudah terhubung ke service yang terpisah
-
-## Kondisi Saat Ini
-
-Project ini sudah cocok untuk:
-
-- pembelajaran microservices
-- demo internal
-- project portofolio
-
-Beberapa area yang masih bisa ditingkatkan:
-
-- autentikasi dan otorisasi antar service
-- validasi harga dan stok saat create order
-- proteksi endpoint admin di `order-service`
-- dokumentasi API yang lebih lengkap
-- automated testing
-
-## Saran Pengembangan Lanjutan
-
-- Tambahkan middleware JWT di `order-service`
-- Sinkronkan stok produk saat order dibuat
-- Tambahkan payment flow yang benar-benar aktif
-- Tambahkan dokumentasi API dengan Swagger atau Postman collection
-- Tambahkan CI/CD sederhana untuk build dan test
-
-## Author
-
-Gunakan bagian ini untuk nama kamu, link GitHub, dan deskripsi singkat proyek saat dipakai sebagai portofolio.
